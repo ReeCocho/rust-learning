@@ -3,46 +3,81 @@ use rand::Rng;
 
 fn main() 
 {
+    // Generate random number to guess
+    let value = rand::thread_rng().gen_range(1, 101);
+        
+    // Prompt user to begin guessing
+    println!("I'm thinking of a number between 1 and 100...");
+    print!("Guess what it is: ");
+    io::Write::flush(&mut io::stdout()).expect("Flush failed!");
+
     // Main game loop
     loop
     {
-        // Generate random number to guess
-        let value = rand::thread_rng().gen_range(1, 101);
-        
-        // Prompt user to begin guessing
-        print!("I'm thinking of a number between 1 and 100... Guess what it is!");
-        io::Write::flush(&mut io::stdout()).expect("Flush failed!");
-
         // User guess loop
+        let mut user_guess: i32;
         loop
         {
             // Read input
             let mut input = String::new();
-            match io::stdin().read_line(&mut input)
+            if io::stdin().read_line(&mut input).is_err()
             {
-                Ok(_o) => {}
-                Err(_e) => 
-                {
-                    println!("\nSorry, I didn't quite understand you.");
-                    print!("Please try again: ");
-                    io::Write::flush(&mut io::stdout()).expect("flush failed!");
-                }
+                println!("\nSorry, I didn't quite understand you.");
+                print!("Please try again: ");
+                io::Write::flush(&mut io::stdout()).expect("flush failed!");
+                continue;
             }
 
-            // Convert input to integer
-            let mut input_as_int : i32;
-            match input.trim().parse::<i32>() 
+            // Convert input to an integer
+            user_guess = input.trim().parse::<i32>().unwrap_or_else(|error|
             {
-                Ok(o) =>
-                {
-                    if o < 1 || o > 100
-                    {
-                        println!("\nChoose a number between 1 and 100.");
-                        print!("Please try again: ");
-                        io::Write::flush(&mut io::stdout()).expect("flush failed!");
-                    }
-                }
+                println!("\nSorry, I didn't quite understand you.");
+                print!("Please try again: ");
+                io::Write::flush(&mut io::stdout()).expect("flush failed!");
+                return 0;
+            });
+            
+            // Invalid guess
+            if user_guess == 0
+            {
+                continue;
             }
+            // Bounds checking for valid guess
+            else if user_guess < 1 || user_guess > 100
+            {
+                println!("\nChoose a number between 1 and 100.");
+                print!("Please try again: ");
+                io::Write::flush(&mut io::stdout()).expect("flush failed!");
+                continue;
+            }
+
+            // Break out of loop
+            break;
+        }
+
+        // Too high
+        if user_guess > value
+        {
+            println!("\nToo high!");
+            print!("Try again: ");
+            io::Write::flush(&mut io::stdout()).expect("flush failed!");
+            continue;
+        }
+        // Too low
+        else if user_guess < value
+        {
+            println!("\nToo low!");
+            print!("Try again: ");
+            io::Write::flush(&mut io::stdout()).expect("flush failed!");
+            continue;
+        }
+        // Correct answer
+        else
+        {
+            break;
         }
     }
+
+    // Win message
+    println!("\nYou guessed right! The number I was thinking of was {}!", value);
 }
